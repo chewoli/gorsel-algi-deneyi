@@ -24,18 +24,8 @@
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover; /* Resmi kırpmadan ve bozmadan tam ekran yayar */
+            cursor: pointer; /* Kullanıcıya ekrana tıklayabileceğini belirtmek için imleci el işareti yapar */
         }
-        
-        /* Sağ Alt Köşedeki Sabit SONRAKİ Butonu */
-        #sonraki-btn {
-            position: absolute; bottom: 30px; right: 30px;
-            padding: 15px 40px; font-size: 18px; font-weight: bold;
-            background: #ff4757; color: white; border: none; border-radius: 8px;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
-            z-index: 5;
-        }
-        #sonraki-btn:active { transform: scale(0.95); }
         
         .btn { padding: 12px 30px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
         .btn-basla { background: #2ed573; color: white; margin-top: 20px; }
@@ -51,9 +41,7 @@
         <button class="btn btn-basla" onclick="deneyiBaslat()">Deneyi Başlat</button>
     </div>
 
-    <div id="deney-alani">
-        <button id="sonraki-btn" onclick="sonrakiGorsel()">SONRAKİ &rarr;</button>
-    </div>
+    <div id="deney-alani" onclick="sonrakiGorsel()"></div>
 
     <script>
         // --- AYARLAR ---
@@ -64,8 +52,8 @@
         let katilimciId = "";
         let baslangicZamani = 0;
 
-        // Her gruptan 20 adet görsel ekleme
-        for(let i = 1; i <= 20; i++) {
+        // Her gruptan 16 adet görsel ekleme
+        for(let i = 1; i <= 16; i++) {
             gorseller.push({ ad: `low_${i}.png`, kat: "Basit" });
             gorseller.push({ ad: `mid_${i}.png`, kat: "Orta" });
             gorseller.push({ ad: `high_${i}.png`, kat: "Zor" });
