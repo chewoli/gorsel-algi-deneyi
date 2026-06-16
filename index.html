@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görsel Algı Deneyi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #fff; overflow: hidden; }
+        
+        /* Giriş Ekranı */
+        #giris-ekrani {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #222; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10;
+        }
+        
+        /* Deney Alanı (Arka plan resmi mantığıyla tam ekran kaplama) */
+        #deney-alani { 
+            display: none; 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover; /* Resmi kırpmadan ve bozmadan tam ekran yayar */
+            cursor: pointer; /* Kullanıcıya ekrana tıklayabileceğini belirtmek için imleci el işareti yapar */
+        }
+        
+        .btn { padding: 12px 30px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-basla { background: #2ed573; color: white; margin-top: 20px; }
+        input { padding: 10px; font-size: 16px; border-radius: 5px; border: none; text-align: center; color: #000; }
+    </style>
+</head>
+<body>
+
+    <div id="giris-ekrani">
+        <h2>Görsel Algı Deneyine Hoş Geldiniz</h2>
+        <p style="margin: 10px 0 20px 0; color: #aaa;">Lütfen katılımcı numarasını girip Başla'ya tıklayın.</p>
+        <input type="text" id="katilimci-input" placeholder="Örn: Katilimci_1">
+        <button class="btn btn-basla" onclick="deneyiBaslat()">Deneyi Başlat</button>
+    </div>
+
+    <div id="deney-alani" onclick="sonrakiGorsel()"></div>
+
+    <script>
+        // --- AYARLAR ---
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwI6vHAwv63I8LF36Ghp8oY1QL09GJEEaRr8iMLEa7ywQykPj1FqQezjxmANmrLCbM2zQ/exec"; 
+        
+        let gorseller = [];
+        let mevcutSira = 0;
+        let katilimciId = "";
+        let baslangicZamani = 0;
+
+        // Her gruptan 16 adet görsel ekleme
+        for(let i = 1; i <= 16; i++) {
+            gorseller.push({ ad: `low_${i}.png`, kat: "Basit" });
+            gorseller.push({ ad: `mid_${i}.png`, kat: "Orta" });
+            gorseller.push({ ad: `high_${i}.png`, kat: "Zor" });
+        }
+
+        // Rastgele karıştırma
+        function diziyiKaristir(dizi) {
+            for (let i = dizi.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [dizi[i], dizi[j]] = [dizi[j], dizi[i]];
+            }
+        }
+
+        function deneyiBaslat() {
+            katilimciId = document.getElementById("katilimci-input").value.trim();
+            if(!katilimciId) { alert("Lütfen geçerli bir Katılımcı ID girin!"); return; }
+            
+            diziyiKaristir(gorseller);
+            
+            document.getElementById("giris-ekrani").style.display = "none";
+            document.getElementById("deney-alani").style.display = "block";
+            
+            ekranaGorselGetir();
+        }
+
+        function ekranaGorselGetir() {
+            if(mevcutSira >= gorseller.length) {
+                alert("Deney başarıyla tamamlandı! Katılımınız için teşekkür ederiz.");
+                location.reload();
+                return;
+            }
+            
+            const aktifGorsel = gorseller[mevcutSira];
+            const alan = document.getElementById("deney-alani");
+            let gorselYolu = "";
+            
+            // Klasör yolları belirleme
+            if(aktifGorsel.kat === "Basit") gorselYolu = "low complexity/" + aktifGorsel.ad;
+            else if(aktifGorsel.kat === "Orta") gorselYolu = "mid complexity/" + aktifGorsel.ad;
+            else if(aktifGorsel.kat === "Zor") gorselYolu = "high complexity/" + aktifGorsel.ad;
+            
+            // Resmi arka plana yüklemek için önceden tarayıcıda tetikliyoruz (Süre hatasını önlemek için)
+            const imgPreload = new Image();
+            imgPreload.src = gorselYolu;
+            imgPreload.onload = function() {
+                alan.style.backgroundImage = `url('${gorselYolu}')`;
+                baslangicZamani = performance.now(); // Resim ekrana tam yerleştiği an süre başlar
+            };
+        }
+
+        function sonrakiGorsel() {
+            const bitisZamani = performance.now();
+            const harcananSure = Math.round(bitisZamani - baslangicZamani);
+            const mevcutGorsel = gorseller[mevcutSira];
+            
+            veriyiGonder({
+                katilinci_id: katilimciId,
+                gorsel_adi: mevcutGorsel.ad,
+                kategori: mevcutGorsel.kat,
+                sure_ms: harcananSure,
+                gosterim_sirasi: mevcutSira + 1
+            });
+            
+            mevcutSira++;
+            ekranaGorselGetir();
+        }
+
+        function veriyiGonder(veri) {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(veri)
+            }).catch(err => console.error("Veri iletilemedi:", err));
+        }
+    </script>
+</body>
+</html>
